@@ -1,7 +1,7 @@
 import requests
 import streamlit as st
 
-BACKEND_URL = "http://127.0.0.1:8001"
+BACKEND_URL = "https://humanoid-chatbot.onrender.com"
 
 st.set_page_config(
     page_title="Humanoid Memory Agent",
