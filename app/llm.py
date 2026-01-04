@@ -1,4 +1,5 @@
-from google import genai
+import google.generativeai as genai
+
 from langchain_core.messages import AIMessage, HumanMessage
 from langsmith import traceable
 from typing import List
