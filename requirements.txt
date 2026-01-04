@@ -10,5 +10,7 @@ langgraph
 langchain-community
 langsmith
 
-google-generativeai
+
 supabase
+
+google.generativeai
