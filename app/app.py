@@ -16,23 +16,38 @@ from app.memory import (
 app = FastAPI()
 
 
-# ---------------- HISTORY ----------------
+# ---------------- HEALTH (REQUIRED FOR RENDER) ----------------
+
+@app.get("/")
+def health():
+    return {"status": "ok"}
+
+
+# ---------------- CHAT HISTORY ----------------
 
 @app.get("/chat/history")
 def get_history(thread_id: str):
+    """
+    Load full chat history for a thread.
+    Always return a list (never 404).
+    """
     return load_history(thread_id)
 
 
-# ---------------- STREAM ----------------
+# ---------------- STREAM CHAT ----------------
 
 @app.post("/chat/stream")
 async def chat_stream(req: Request):
     body = await req.json()
+
     user_id = body["user_id"]
     thread_id = body["thread_id"]
     user_input = body["message"]
 
+    # Ensure thread exists
     ensure_thread(thread_id, user_id)
+
+    # Store user message immediately
     store_message(thread_id, "user", user_input)
 
     inputs = {
@@ -43,21 +58,30 @@ async def chat_stream(req: Request):
     }
 
     async def event_generator():
+        """
+        Gemini does NOT stream tokens.
+        We invoke LangGraph once, then simulate token streaming.
+        """
         full_response = ""
 
-        # Run LangGraph once (Gemini does not stream)
+        # ---- Run LangGraph (single call) ----
         result = agent_graph.invoke(inputs)
-        ai_msg: AIMessage = result["messages"][-1]
-        text = ai_msg.content
 
-        # Simulated streaming
-        for token in text.split(" "):
-            full_response += token + " "
-            yield f"data: {token} \n\n"
+        ai_msg: AIMessage = result["messages"][-1]
+        text: str = ai_msg.content.strip()
+
+        # ---- Simulated streaming (word-level) ----
+        for word in text.split():
+            full_response += word + " "
+            yield f"data: {word} \n\n"
             await asyncio.sleep(0.03)
 
-        store_message(thread_id, "assistant", full_response.strip())
+        full_response = full_response.strip()
 
+        # ---- Persist assistant message ----
+        store_message(thread_id, "assistant", full_response)
+
+        # ---- Store episodic memory ----
         store_episodic_memory(
             thread_id=thread_id,
             user_id=user_id,
@@ -68,4 +92,7 @@ async def chat_stream(req: Request):
 
         yield "data: [DONE]\n\n"
 
-    return StreamingResponse(event_generator(), media_type="text/event-stream")
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+    )
