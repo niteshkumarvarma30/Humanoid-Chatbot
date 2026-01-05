@@ -1,17 +1,33 @@
-import google.generativeai as genai
+import os
+from typing import List
 
+import google.generativeai as genai
 from langchain_core.messages import AIMessage, HumanMessage
 from langsmith import traceable
-from typing import List
+
+# ---------------- CONFIG ----------------
+
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+if not GEMINI_API_KEY:
+    raise RuntimeError("GEMINI_API_KEY is not set")
+
+genai.configure(api_key=GEMINI_API_KEY)
 
 model = genai.GenerativeModel("gemini-flash-latest")
 
 
+# ---------------- LLM CALL ----------------
+
 @traceable(
     name="gemini_llm_call",
-    run_type="llm"
+    run_type="llm",
 )
 def llm(messages: List[HumanMessage]) -> AIMessage:
+    """
+    Gemini does not support token streaming.
+    This function performs a single-shot generation
+    and returns a LangChain-compatible AIMessage.
+    """
     prompt = "\n\n".join(m.content for m in messages)
 
     response = model.generate_content(
@@ -22,4 +38,6 @@ def llm(messages: List[HumanMessage]) -> AIMessage:
         },
     )
 
-    return AIMessage(content=response.text.strip())
+    text = response.text.strip() if response.text else ""
+
+    return AIMessage(content=text)
