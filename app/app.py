@@ -90,7 +90,7 @@ async def chat_stream(req: Request):
             intensity=result.get("intensity", 0.4),
         )
 
-        yield "data: [DONE]\n\n"
+        yield f"data: {text}\n\n"
 
     return StreamingResponse(
         event_generator(),
