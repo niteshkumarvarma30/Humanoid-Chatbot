@@ -73,7 +73,7 @@ async def chat_stream(req: Request):
         # ---- Simulated streaming (word-level) ----
         for word in text.split():
             full_response += word + " "
-            yield f"data: {word} \n\n"
+            yield f"data: {text} \n\n"
             await asyncio.sleep(0.03)
 
         full_response = full_response.strip()
