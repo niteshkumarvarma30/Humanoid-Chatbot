@@ -33,8 +33,8 @@ def llm(messages: List[HumanMessage]) -> AIMessage:
     response = model.generate_content(
         prompt,
         generation_config={
-            "temperature": 0.7,
-            "max_output_tokens": 1024,
+            "temperature": 0.6,
+            "max_output_tokens": 180,
         },
     )
 
