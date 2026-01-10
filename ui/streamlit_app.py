@@ -54,9 +54,6 @@ if not user_input:
     st.stop()
 
 # Persist + render user message
-st.session_state.messages.append(
-    {"role": "user", "content": user_input}
-)
 
 with st.chat_message("user"):
     st.markdown(user_input)
