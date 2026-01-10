@@ -28,6 +28,7 @@ def llm(messages: List[HumanMessage]) -> AIMessage:
     This function performs a single-shot generation
     and returns a LangChain-compatible AIMessage.
     """
+
     prompt = "\n\n".join(m.content for m in messages)
 
     response = model.generate_content(
@@ -38,6 +39,19 @@ def llm(messages: List[HumanMessage]) -> AIMessage:
         },
     )
 
-    text = response.text.strip() if response.text else ""
+    text = ""
 
-    return AIMessage(content=text)
+    #  SAFE Gemini extraction (no response.text)
+    if response.candidates:
+        candidate = response.candidates[0]
+        if candidate.content and candidate.content.parts:
+            text = candidate.content.parts[0].text or ""
+
+    # Fallback if Gemini blocks or returns empty output
+    if not text.strip():
+        text = (
+            "Let us pause for a moment—clarity often emerges "
+            "when we simplify the question to its essence."
+        )
+
+    return AIMessage(content=text.strip())
