@@ -50,8 +50,9 @@ def llm(messages: List[HumanMessage]) -> AIMessage:
     # Fallback if Gemini blocks or returns empty output
     if not text.strip():
         text = (
-            "Let us pause for a moment—clarity often emerges "
-            "when we simplify the question to its essence."
+            "I am a thoughtful AI modeled to reason like Albert Einstein—"
+            "curious, reflective, and focused on understanding ideas deeply."
+
         )
 
     return AIMessage(content=text.strip())
